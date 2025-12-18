@@ -11,6 +11,7 @@ import * as THREE from "three";
 import { useScrollAnimation } from "./utils/useScrollAnimation";
 import { Cloud } from "./Components/Cloud";
 import { Outer } from "./Outer";
+// import { useParallaxEffect } from "./utils/useParallaxEffect";
 
 type SceneProps = {
   interactive?: boolean;
@@ -26,6 +27,7 @@ const Scene: React.FC<SceneProps> = ({ interactive = false }) => {
 
   // Keep your existing scroll animation
   useScrollAnimation({ interactive, cameraRef, buildingRef });
+  // useParallaxEffect({ interactive, buildingRef, cameraRef });
 
   // Enable cast/receive shadows on all meshes under building
   useEffect(() => {
@@ -62,14 +64,17 @@ const Scene: React.FC<SceneProps> = ({ interactive = false }) => {
         ref={controlsRef}
         makeDefault
         target={[-90, -50, 0]}
-        enableZoom={interactive}
-        enablePan={interactive}
-        enableRotate={interactive}
+        // enableZoom={interactive}
+        // enablePan={interactive}
+        // enableRotate={interactive}
+        enableZoom={true}
+        enablePan={true}
+        enableRotate={true}
         rotateSpeed={0.3}
         enableDamping
         dampingFactor={0.1}
-        zoomSpeed={0.35}
-        maxDistance={1500}
+        // zoomSpeed={0.35}
+        // maxDistance={1500}
         minDistance={0}
       />
 
@@ -80,17 +85,18 @@ const Scene: React.FC<SceneProps> = ({ interactive = false }) => {
       {/* Main Light (same angle/point as your old light) */}
       <directionalLight
         castShadow
-        position={[-30, 32, -16]}
-        intensity={6}
+        // position={[-30, 32, -16]}
+        position={[25, 150, 110]}
+        intensity={3}
         shadow-mapSize={[4096, 4096]}
         shadow-camera-near={10}
-        shadow-camera-far={1500}
+        shadow-camera-far={2000}
         shadow-camera-left={-300}
         shadow-camera-right={300}
         shadow-camera-top={300}
         shadow-camera-bottom={-300}
-        shadow-bias={-0.0005}
-        shadow-normalBias={0.02}
+        shadow-bias={-0.001}
+        shadow-normalBias={0.03}
         shadow-radius={3}
       />
 
@@ -98,12 +104,12 @@ const Scene: React.FC<SceneProps> = ({ interactive = false }) => {
       <ambientLight intensity={0.65} />
       <directionalLight
         position={[-2000, 200, 900]}
-        intensity={0.5}
+        intensity={0.2}
         color="#d9e6ff"
       />
 
       {/* Environment (keep your HDRI) */}
-      <Environment files="/sky.hdr" background environmentIntensity={0.04} />
+      <Environment files="/sky.hdr" background environmentIntensity={-0.10} />
 
       {/* Clouds (unchanged) */}
       <Cloud

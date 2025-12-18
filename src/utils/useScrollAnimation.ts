@@ -1,249 +1,123 @@
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useLayoutEffect } from "react";
-import * as THREE from "three";
+import { useLayoutEffect } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import * as THREE from 'three';
 
 gsap.registerPlugin(ScrollTrigger);
 
-type UseScrollAnimationProps = {
-  interactive: boolean;
-  cameraRef: React.RefObject<THREE.PerspectiveCamera | null>;
-  buildingRef: React.RefObject<THREE.Group | null>;
-};
+export interface CameraState {
+  cameraPos: [number, number, number];
+  cameraTarget: [number, number, number];
+  fov: number;
+  cameraZoom: number;
+  cameraRotate: number;
+}
 
-export const useScrollAnimation = ({
-  interactive,
-  cameraRef,
-  buildingRef,
-}: UseScrollAnimationProps) => {
+export const useScrollAnimation = (
+  camera: THREE.PerspectiveCamera,
+  controls: any,
+  buildingGroup: THREE.Group | null
+) => {
   useLayoutEffect(() => {
-    if (interactive) return;
-    ScrollTrigger.refresh();
+    if (!camera || !controls || !buildingGroup) return;
 
-    // --- Section One Animation ---
-    // const secOne = document.getElementById("section-one");
-    // if (secOne && cameraRef.current && buildingRef.current) {
-    //   const tl = gsap.timeline({
-    //     scrollTrigger: {
-    //       trigger: "#section-one",
-    //       start: "top bottom",
-    //       end: "center center",
-    //       scrub: 1,
-    //       immediateRender: false,
-    //     },
-    //   });
+    const sections = gsap.utils.toArray('.section-container');
+    if (sections.length === 0) return;
 
-    //   // camera framing for Section One
-    //   tl.to(cameraRef.current.position, {
-    //     x: 200,
-    //     y: -140,
-    //     z: 800,
-    //     ease: "power1.inOut",
-    //   });
-    //   tl.to(
-    //     cameraRef.current,
-    //     {
-    //       fov: 45,
-    //       ease: "power1.inOut",
-    //       onUpdate: () => cameraRef.current?.updateProjectionMatrix(),
-    //     },
-    //     0
-    //   );
+    const states: CameraState[] = [
+      // Section 1 (Default)
+      {
+        cameraPos: [13.2678760072932, 9.54023342452855, 64.77327507868063],
+        cameraTarget: [-15.6, 20.9, 0],
+        fov: 20,
+        cameraZoom: 1,
+        cameraRotate: 0
+      },
+      // Section 2
+      {
+        cameraPos: [-13.408303750702185, 11.066691982639194, 54.60893004017202],
+        cameraTarget: [13, 20.9, 0],
+        fov: 23,
+        cameraZoom: 1,
+        cameraRotate: -25.209698848595327
+      },
+      // Section 3
+      {
+        cameraPos: [10.568650274904392, 7.136651075700531, 49.85600330088933],
+        cameraTarget: [-3.1, 25.2, 0],
+        fov: 25,
+        cameraZoom: 1,
+        cameraRotate: 15.331634260494987
+      },
+      // Section 4 (Placeholder)
+      {
+        cameraPos: [14.877977029946356, 1.02899171981047, 67.09472369306603],
+        cameraTarget: [-3.1, 18.5, 0],
+        fov: 25,
+        cameraZoom: 1,
+        cameraRotate: 15
+      },
+      // Section 5 (Placeholder)
+      {
+        cameraPos: [-13.408303750702185, 11.066691982639194, 54.60893004017202],
+        cameraTarget: [13, 20.9, 0],
+        fov: 23,
+        cameraZoom: 1,
+        cameraRotate: -25.209698848595327
+      },
+      // Section 6 (Placeholder)
+      {
+        cameraPos: [10.568650274904392, 7.136651075700531, 49.85600330088933],
+        cameraTarget: [-3.1, 25.2, 0],
+        fov: 25,
+        cameraZoom: 1,
+        cameraRotate: 15.331634260494987
+      },
+    ];
 
-    //   // use positions/rotation from Scene.tsx for the SectionOne center
-    //   tl.to(
-    //     buildingRef.current.rotation,
-    //     { y: -Math.PI / 3.1, ease: "power1.inOut" },
-    //     0
-    //   );
-    //   tl.to(
-    //     buildingRef.current.position,
-    //     { x: 220, y: -140, z: 0, ease: "power1.inOut" },
-    //     0
-    //   );
-    // }
-
-    // --- Section Two Animation ---
-    const secTwo = document.getElementById("section-two");
-    if (secTwo && cameraRef.current) {
+    const ctx = gsap.context(() => {
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: "#section-two",
-          start: "top bottom",
-          end: "center center",
-          scrub: 1,
-          immediateRender: false,
-        },
+          trigger: 'body',
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 1.5,
+        }
       });
 
-      tl.to(cameraRef.current.position, {
-        x: -1100,
-        y: -450,
-        z: 800,
-        ease: "power1.inOut",
-      });
-      tl.to(
-        cameraRef.current,
-        {
-          fov: 35,
-          ease: "power1.inOut",
-          onUpdate: () => cameraRef.current?.updateProjectionMatrix(),
-        },
-        0
-      );
-      if (buildingRef.current) {
-        tl.to(
-          buildingRef.current.rotation,
-          { y: -0.1, ease: "power1.inOut" },
-          0
-        );
-        tl.to(
-          buildingRef.current.position,
-          { x: -650, y: -330, ease: "power1.inOut" },
-          0
-        );
+      // Iterate through states to create transitions
+      for (let i = 0; i < states.length - 1; i++) {
+        const nextState = states[i + 1];
+
+        // Position animation
+        tl.to(camera.position, {
+          x: nextState.cameraPos[0],
+          y: nextState.cameraPos[1],
+          z: nextState.cameraPos[2],
+          duration: 1,
+          ease: "power2.inOut",
+        }, i);
+
+        // Target animation
+        tl.to(controls.target, {
+          x: nextState.cameraTarget[0],
+          y: nextState.cameraTarget[1],
+          z: nextState.cameraTarget[2],
+          duration: 1,
+          onUpdate: () => controls.update(),
+          ease: "power2.inOut",
+        }, i);
+
+        // FOV animation
+        tl.to(camera, {
+          fov: nextState.fov,
+          duration: 1,
+          onUpdate: () => camera.updateProjectionMatrix(),
+          ease: "power2.inOut",
+        }, i);
       }
-    }
+    });
 
-    // --- Section Three Animation ---
-    const secThree = document.getElementById("section-three");
-    if (secThree && cameraRef.current) {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: "#section-three",
-          start: "top bottom",
-          end: "center center",
-          scrub: 1,
-          immediateRender: false,
-        },
-      });
-
-      tl.to(cameraRef.current.position, {
-        x: -1200,
-        y: -450,
-        z: 1000,
-        ease: "power1.inOut",
-      });
-      tl.to(
-        cameraRef.current,
-        {
-          fov: 16,
-          ease: "power1.inOut",
-          onUpdate: () => cameraRef.current?.updateProjectionMatrix(),
-        },
-        0
-      );
-      if (buildingRef.current) {
-        tl.to(
-          buildingRef.current.rotation,
-          { y: -Math.PI / 2.8, ease: "power1.inOut" },
-          0
-        );
-        tl.to(
-          buildingRef.current.position,
-          { x: -50, y: -270, ease: "power1.inOut" },
-          0
-        );
-      }
-    }
-
-    // --- Section Four Animation ---
-    const secFour = document.getElementById("section-four");
-    if (secFour && cameraRef.current && buildingRef.current) {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: "#section-four",
-          start: "top bottom",
-          end: "center center",
-          scrub: 1,
-          immediateRender: false,
-        },
-      });
-
-      tl.to(
-        cameraRef.current,
-        {
-          fov: 20,
-          ease: "power1.inOut",
-          onUpdate: () => cameraRef.current?.updateProjectionMatrix(),
-        },
-        0
-      );
-    }
-
-    // --- Section Five Animation ---
-    const secFive = document.getElementById("section-five");
-    if (secFive && cameraRef.current) {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: "#section-five",
-          start: "top center",
-          end: "center center",
-          scrub: 1,
-          immediateRender: false,
-        },
-      });
-
-      tl.to(cameraRef.current.position, {
-        x: -1200,
-        y: -450,
-        z: 1000,
-        ease: "power1.inOut",
-      });
-      if (buildingRef.current) {
-        tl.to(
-          buildingRef.current.rotation,
-          { y: -Math.PI / 3, ease: "power1.inOut" },
-          0
-        );
-        tl.to(
-          buildingRef.current.position,
-          { x: -250, y: -270, ease: "power1.inOut" },
-          0
-        );
-      }
-    }
-
-    // --- Section Six Animation ---
-    const secSix = document.getElementById("section-six");
-    if (secSix && cameraRef.current) {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: "#section-six",
-          start: "top center",
-          end: "center center",
-          scrub: 1,
-          immediateRender: false,
-        },
-      });
-
-      tl.to(cameraRef.current.position, {
-        x: -1200,
-        y: -300,
-        z: 1000,
-        ease: "power1.inOut",
-      });
-      tl.to(
-        cameraRef.current,
-        {
-          fov: 20,
-          ease: "power1.inOut",
-          onUpdate: () => cameraRef.current?.updateProjectionMatrix(),
-        },
-        0
-      );
-      if (buildingRef.current) {
-        tl.to(
-          buildingRef.current.rotation,
-          { y: -Math.PI / 3, ease: "power1.inOut" },
-          0
-        );
-        tl.to(
-          buildingRef.current.position,
-          { x: -30, y: -150, ease: "power1.inOut" },
-          0
-        );
-      }
-    }
-  }, [interactive, cameraRef, buildingRef]);
+    return () => ctx.revert();
+  }, [camera, controls, buildingGroup]);
 };

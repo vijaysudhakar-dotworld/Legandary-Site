@@ -22,7 +22,6 @@ const SectionSeven: React.FC<SectionSevenProps> = ({
     <>
       <iframe
         src="https://d1cesklfj23k3k.cloudfront.net/"
-        // src="https://apollo-proton-web.quickpath.dotworld.in/"
         className="w-screen h-screen border-0 absolute top-0 left-0 overflow-hidden"
         title="Contact Form"
       ></iframe>

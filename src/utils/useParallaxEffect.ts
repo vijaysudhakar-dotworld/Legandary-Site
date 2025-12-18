@@ -20,7 +20,7 @@ export const useParallaxEffect = ({
     currentX: 0,
     currentY: 0,
   });
-  const appliedOffset = useRef({ x: 0, y: 0 });
+  const appliedOffset = useRef(new THREE.Vector3(0, 0, 0));
 
   const parallaxCam = useRef({
     targetX: 0,
@@ -30,18 +30,16 @@ export const useParallaxEffect = ({
     currentY: 0,
     currentZ: 0,
   });
-  const appliedCamOffset = useRef({ x: 0, y: 0, z: 0 });
+  const appliedCamOffset = useRef(new THREE.Vector3(0, 0, 0));
 
   useEffect(() => {
     const maxOffsetX = 15;
     const maxOffsetY = 10;
 
     const onPointerMove = (e: PointerEvent) => {
-      // Calculate normalized coordinates
       const nx = (e.clientX / window.innerWidth) * 2 - 1;
       const ny = (e.clientY / window.innerHeight) * 2 - 1;
 
-      // Update Targets
       parallax.current.targetX = nx * maxOffsetX;
       parallax.current.targetY = -ny * maxOffsetY;
 
@@ -56,7 +54,13 @@ export const useParallaxEffect = ({
     window.addEventListener("pointermove", onPointerMove);
     let rafId: number;
 
-    const animate = () => {
+    let lastTime = performance.now();
+    const animate = (time: number) => {
+      const dt = Math.max(0, (time - lastTime) / 1000);
+      lastTime = time;
+
+      // frame-rate independent smoothing factor helper
+      const smoothFactor = (k: number) => 1 - Math.exp(-k * dt);
       // 1. IF ROOM SELECTED: FORCE TARGETS TO 0 (Disable movement)
       if (selectedRoom) {
         parallax.current.targetX = 0;
@@ -65,65 +69,39 @@ export const useParallaxEffect = ({
 
       // --- Building Parallax ---
       if (buildingRef.current) {
-        // Smoothly interpolate current -> target
+        const s = smoothFactor(6);
         parallax.current.currentX +=
-          (parallax.current.targetX - parallax.current.currentX) * 0.08;
+          (parallax.current.targetX - parallax.current.currentX) * s;
         parallax.current.currentY +=
-          (parallax.current.targetY - parallax.current.currentY) * 0.08;
+          (parallax.current.targetY - parallax.current.currentY) * s;
 
-        // Remove previous offset, add new offset
-        const base = buildingRef.current.position
-          .clone()
-          .sub(
-            new THREE.Vector3(
-              appliedOffset.current.x,
-              appliedOffset.current.y,
-              0
-            )
-          );
-        const newPos = base.add(
-          new THREE.Vector3(
-            parallax.current.currentX,
-            parallax.current.currentY,
-            0
-          )
-        );
-
+        // Compute new position by removing previous applied offset then adding current
+        const base = buildingRef.current.position.clone().sub(appliedOffset.current);
+        appliedOffset.current.set(parallax.current.currentX, parallax.current.currentY, 0);
+        const newPos = base.add(appliedOffset.current);
         buildingRef.current.position.copy(newPos);
-        appliedOffset.current.x = parallax.current.currentX;
-        appliedOffset.current.y = parallax.current.currentY;
       }
 
       // --- Camera Parallax (Only if NOT interactive) ---
       if (cameraRef.current && !interactive) {
+        const sCam = smoothFactor(4);
         parallaxCam.current.currentX +=
-          (parallaxCam.current.targetX - parallaxCam.current.currentX) * 0.06;
+          (parallaxCam.current.targetX - parallaxCam.current.currentX) * sCam;
         parallaxCam.current.currentY +=
-          (parallaxCam.current.targetY - parallaxCam.current.currentY) * 0.06;
+          (parallaxCam.current.targetY - parallaxCam.current.currentY) * sCam;
         parallaxCam.current.currentZ +=
-          (parallaxCam.current.targetZ - parallaxCam.current.currentZ) * 0.06;
+          (parallaxCam.current.targetZ - parallaxCam.current.currentZ) * sCam;
 
-        const camBase = cameraRef.current.position
-          .clone()
-          .sub(
-            new THREE.Vector3(
-              appliedCamOffset.current.x,
-              appliedCamOffset.current.y,
-              appliedCamOffset.current.z
-            )
-          );
-        const camNew = camBase.add(
-          new THREE.Vector3(
-            parallaxCam.current.currentX,
-            parallaxCam.current.currentY,
-            parallaxCam.current.currentZ
-          )
+        const camBase = cameraRef.current.position.clone().sub(appliedCamOffset.current);
+        appliedCamOffset.current.set(
+          parallaxCam.current.currentX,
+          parallaxCam.current.currentY,
+          parallaxCam.current.currentZ
         );
+        const camNew = camBase.add(appliedCamOffset.current);
         cameraRef.current.position.copy(camNew);
-        appliedCamOffset.current.x = parallaxCam.current.currentX;
-        appliedCamOffset.current.y = parallaxCam.current.currentY;
-        appliedCamOffset.current.z = parallaxCam.current.currentZ;
       }
+
       rafId = requestAnimationFrame(animate);
     };
 
