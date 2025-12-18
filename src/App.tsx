@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Lenis from 'lenis'
 import { useProgress } from '@react-three/drei'
 import Loader from './Components/Loader'
@@ -13,11 +13,15 @@ import SectionFour from './Components/SectionFour'
 import SectionSeven from './Components/SectionSeven'
 
 function LoadingScreen() {
-  const { active } = useProgress()
-  return <Loader isLoading={active} />
+  const { active, progress } = useProgress()
+  // Stay loading as long as THREE is active OR progress is not 100%
+  const loading = active || progress < 100
+  return <Loader isLoading={loading} />
 }
 
 export default function App() {
+  const [isExploring, setIsExploring] = useState(false)
+  const [savedScrollPos, setSavedScrollPos] = useState(0)
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -28,54 +32,85 @@ export default function App() {
       smoothWheel: true,
     })
 
-    lenis.on('scroll', () => {
-      import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
-        ScrollTrigger.update();
+    if (isExploring) {
+      lenis.destroy()
+    } else {
+      lenis.on('scroll', () => {
+        import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
+          ScrollTrigger.update();
+        });
       });
-    });
 
-    function raf(time: number) {
-      lenis.raf(time)
+      function raf(time: number) {
+        lenis.raf(time)
+        requestAnimationFrame(raf)
+      }
+
       requestAnimationFrame(raf)
-    }
 
-    requestAnimationFrame(raf)
+      // Restore scroll position if returning from exploration
+      if (savedScrollPos > 0) {
+        lenis.scrollTo(savedScrollPos, { immediate: true })
+        // Force a refresh of all scroll animations
+        setTimeout(() => {
+          import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
+            ScrollTrigger.refresh()
+          })
+        }, 100)
+      }
+    }
 
     return () => {
       lenis.destroy()
     }
-  }, [])
+  }, [isExploring, savedScrollPos])
+
+  const handleExplore = () => {
+    setSavedScrollPos(window.scrollY)
+    setIsExploring(true)
+  }
+
+  const handleClose = () => {
+    setIsExploring(false)
+  }
 
   return (
     <>
       <ProductionViewer />
-      {/* <BuildingViewer /> */}
 
-
-
-      <div className="relative z-10">
-        <div className="pointer-events-auto">
-          <div className="section-container">
-            <SectionOne isReady={true} />
-          </div>
-          <div className="section-container">
-            <SectionTwo />
-          </div>
-          <div className="section-container">
-            <SectionThree />
-          </div>
-          <div className="section-container">
-            <SectionFour />
-          </div>
-          <div className="section-container">
-            <SectionFive />
-          </div>
-          <div className="section-container">
-            <SectionSix />
-          </div>
+      <div
+        className="relative z-10 overflow-hidden transition-opacity duration-300"
+        style={{
+          opacity: isExploring ? 0 : 1,
+          pointerEvents: isExploring ? 'none' : 'auto',
+          visibility: isExploring ? 'hidden' : 'visible'
+        }}
+      >
+        <div className="section-container">
+          <SectionOne isReady={true} />
+        </div>
+        <div className="section-container">
+          <SectionTwo />
+        </div>
+        <div className="section-container">
+          <SectionThree />
+        </div>
+        <div className="section-container">
+          <SectionFour />
+        </div>
+        <div className="section-container">
+          <SectionFive />
+        </div>
+        <div className="section-container">
+          <SectionSix onExplore={handleExplore} />
         </div>
       </div>
-      {/* <LoadingScreen /> */}
+
+      <div className={`fixed inset-0 z-50 transition-all duration-500 ${isExploring ? ' opacity-100' : ' opacity-0 pointer-events-none'}`}>
+        <SectionSeven onClose={handleClose} />
+      </div>
+
+      <LoadingScreen />
     </>
   )
 }

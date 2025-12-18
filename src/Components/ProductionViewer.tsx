@@ -1,7 +1,7 @@
 import { Suspense, useRef, useEffect, useState } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls, useGLTF, Environment, useTexture, Billboard } from '@react-three/drei'
-import { PerspectiveCamera, PCFSoftShadowMap, PCFShadowMap, BasicShadowMap, ACESFilmicToneMapping, ReinhardToneMapping, LinearToneMapping, NoToneMapping, NeutralToneMapping, Group } from 'three'
+import { PerspectiveCamera, PCFSoftShadowMap, PCFShadowMap, BasicShadowMap, ACESFilmicToneMapping, ReinhardToneMapping, LinearToneMapping, NoToneMapping, NeutralToneMapping, Group, DirectionalLight } from 'three'
 import { useScrollAnimation } from '../utils/useScrollAnimation'
 
 function Model({ url, position, rotation, scale, shadowsEnabled, modelRef }: { url: string, position: [number, number, number], rotation: [number, number, number], scale: [number, number, number], shadowsEnabled: boolean, modelRef: (node: Group) => void }) {
@@ -9,13 +9,19 @@ function Model({ url, position, rotation, scale, shadowsEnabled, modelRef }: { u
 
     useEffect(() => {
         if (!gltf || !gltf.scene) return
+
         gltf.scene.traverse((child: any) => {
             if (child.isMesh) {
                 child.castShadow = shadowsEnabled
                 child.receiveShadow = shadowsEnabled
-                if (child.material) child.material.needsUpdate = true
+                if (child.material) {
+                    child.material.needsUpdate = true
+                    // Force material updates for shadow visibility
+                    child.material.forceUpdate = true
+                }
             }
         })
+
     }, [gltf, shadowsEnabled])
 
     return <primitive ref={modelRef} object={gltf.scene} position={position} rotation={rotation} scale={scale} />
@@ -28,8 +34,6 @@ function MovingCloud({ position, speed, scale, color = "#ffa2a2ff" }: { position
 
     useFrame((state) => {
         if (cloudRef.current) {
-            // Oscillate around the initial X position
-            // speed controls how fast it moves, 5 is the range (how far left/right it goes)
             cloudRef.current.position.x = initialX + Math.sin(state.clock.elapsedTime * speed) * 1
         }
     })
@@ -46,9 +50,10 @@ function MovingCloud({ position, speed, scale, color = "#ffa2a2ff" }: { position
 
 function Scene() {
     const { camera, scene, gl } = useThree()
-    const dirLightRef = useRef<any>(null)
+    const dirLightRef = useRef<DirectionalLight>(null)
     const controlsRef = useRef<any>(null)
     const [building, setBuilding] = useState<Group | null>(null)
+    const [shadowUpdateFlag, setShadowUpdateFlag] = useState(0)
 
     // Scroll Animation Hook
     useScrollAnimation(camera as PerspectiveCamera, controlsRef.current, building)
@@ -91,9 +96,22 @@ function Scene() {
         camera.updateProjectionMatrix()
     }, [camera])
 
-    // Apply renderer settings
+    // Force shadow map regeneration after model loads
+    useEffect(() => {
+        if (!building) return
+
+        // Force a shadow map update
+        const timer = setTimeout(() => {
+            setShadowUpdateFlag(prev => prev + 1)
+        }, 100)
+
+        return () => clearTimeout(timer)
+    }, [building])
+
+    // Apply renderer settings with shadow map regeneration
     useEffect(() => {
         if (!gl) return
+
         try {
             if (config.toneMapping === 'ACES') (gl as any).toneMapping = ACESFilmicToneMapping
             else if (config.toneMapping === 'Reinhard') (gl as any).toneMapping = ReinhardToneMapping
@@ -104,43 +122,89 @@ function Scene() {
 
                 ; (gl as any).toneMappingExposure = config.exposure
                 ; (gl as any).shadowMap.enabled = !!config.shadowsEnabled
+                ; (gl as any).shadowMap.autoUpdate = true
+                ; (gl as any).shadowMap.needsUpdate = true
 
             if (config.shadowsEnabled) {
                 if (config.shadowQuality === 'low') (gl as any).shadowMap.type = BasicShadowMap
                 else if (config.shadowQuality === 'medium') (gl as any).shadowMap.type = PCFShadowMap
                 else (gl as any).shadowMap.type = PCFSoftShadowMap
+
+                // Force renderer to regenerate shadow maps
+                gl.shadowMap.needsUpdate = true
             }
         } catch (e) {
-            // ignore
+            console.warn('Renderer settings error:', e)
         }
-    }, [gl])
+    }, [gl, config, shadowUpdateFlag]) // Added shadowUpdateFlag dependency
 
-    // Update directional light
+    // Update directional light with forced shadow regeneration
     useEffect(() => {
         const dl = dirLightRef.current
-        if (dl) {
-            if (dl.shadow && dl.shadow.mapSize) {
-                const res = config.shadowResolution || 2048
-                dl.shadow.mapSize.width = res
-                dl.shadow.mapSize.height = res
+        if (!dl) return
+
+        // Force shadow map regeneration
+        if (dl.shadow) {
+            const res = config.shadowResolution || 2048
+            dl.shadow.mapSize.width = res
+            dl.shadow.mapSize.height = res
+
+            // Invalidate the current shadow map to force regeneration
+            if (dl.shadow.map) {
+                dl.shadow.map.dispose()
+                dl.shadow.map = null as any
             }
-            if (dl.shadow && dl.shadow.camera) {
+
+            dl.shadow.needsUpdate = true
+            // dl.shadow.camera.needsUpdate = true
+
+            if (dl.shadow.camera) {
                 dl.shadow.camera.far = 50
                 dl.shadow.camera.left = -20
                 dl.shadow.camera.right = 20
                 dl.shadow.camera.top = 20
                 dl.shadow.camera.bottom = -20
-                dl.shadow.bias = config.shadowBias
-                dl.shadow.normalBias = config.shadowNormalBias
-                dl.shadow.radius = config.shadowSoftness ?? config.shadowRadius
+                dl.shadow.camera.updateProjectionMatrix()
             }
-            if (config.directionalTarget && dl.target && dl.target.position) {
-                dl.target.position.set(config.directionalTarget[0], config.directionalTarget[1], config.directionalTarget[2])
-                if (dl.target.updateMatrixWorld) dl.target.updateMatrixWorld()
-                try { scene.add(dl.target) } catch (e) { /* already added? */ }
+
+            dl.shadow.bias = config.shadowBias
+            dl.shadow.normalBias = config.shadowNormalBias
+            dl.shadow.radius = config.shadowSoftness ?? config.shadowRadius
+
+            // Force update
+            dl.shadow.updateMatrices(dl)
+        }
+
+        if (config.directionalTarget && dl.target) {
+            dl.target.position.set(config.directionalTarget[0], config.directionalTarget[1], config.directionalTarget[2])
+            dl.target.updateMatrixWorld()
+
+            try {
+                if (!scene.getObjectById(dl.target.id)) {
+                    scene.add(dl.target)
+                }
+            } catch (e) {
+                // already added
             }
         }
-    }, [dirLightRef])
+
+        // Schedule another update to ensure shadow maps are generated
+        const timer = setTimeout(() => {
+            if (dl.shadow) {
+                dl.shadow.needsUpdate = true
+            }
+        }, 200)
+
+        return () => clearTimeout(timer)
+    }, [dirLightRef, config, scene, shadowUpdateFlag])
+
+    // Additional frame-based shadow validation
+    useFrame(() => {
+        if (dirLightRef.current?.shadow) {
+            // Ensure shadow matrices are updated
+            dirLightRef.current.shadow.updateMatrices(dirLightRef.current)
+        }
+    })
 
     return (
         <>
@@ -152,6 +216,16 @@ function Scene() {
                 intensity={config.directionalIntensity}
                 castShadow={config.shadowsEnabled}
                 color={config.directionalColor}
+                shadow-camera-far={50}
+                shadow-camera-left={-20}
+                shadow-camera-right={20}
+                shadow-camera-top={20}
+                shadow-camera-bottom={-20}
+                shadow-mapSize-width={config.shadowResolution}
+                shadow-mapSize-height={config.shadowResolution}
+                shadow-bias={config.shadowBias}
+                shadow-normalBias={config.shadowNormalBias}
+                shadow-radius={config.shadowSoftness}
             />
             <pointLight position={[0, 10, 0]} intensity={config.fillIntensity} />
             <pointLight position={[-10, 5, 10]} intensity={0} distance={40} />
@@ -186,21 +260,42 @@ function Scene() {
 }
 
 export default function ProductionViewer() {
+    const [key, setKey] = useState(0)
+
+    // Force a complete re-render on mount to ensure consistent shadow initialization
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setKey(prev => prev + 1)
+        }, 100)
+        return () => clearTimeout(timer)
+    }, [])
+
     return (
         <div
+            key={key}
             className="fixed top-0 left-0 w-full h-full overflow-hidden bg-cover bg-center"
             style={{
                 backgroundImage: `url('/sun.jpg'), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1' height='1'><rect width='100%' height='100%' fill='%2316213e'/></svg>")`
             }}
         >
             <Canvas
+                key={`canvas-${key}`}
                 shadows
                 camera={{
                     position: [13.2678760072932, 9.54023342452855, 64.77327507868063],
                     fov: 23
                 }}
                 onCreated={({ gl }) => {
-                    gl.toneMappingExposure = 1.0;
+                    gl.toneMappingExposure = 1.0
+                    gl.shadowMap.enabled = true
+                    gl.shadowMap.type = PCFSoftShadowMap
+                    gl.shadowMap.autoUpdate = true
+                    gl.shadowMap.needsUpdate = true
+
+                    // Force an immediate render to initialize shadows
+                    setTimeout(() => {
+                        gl.shadowMap.needsUpdate = true
+                    }, 50)
                 }}
             >
                 <Scene />
