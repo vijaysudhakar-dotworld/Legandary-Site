@@ -60,8 +60,8 @@ function Scene() {
 
     // Hardcoded defaults from BuildingViewer
     const config = {
-        ambientIntensity: 5.72,
-        hemiIntensity: 0.43,
+        ambientIntensity: 6.07,
+        hemiIntensity: 0.76,
         directionalIntensity: 20,
         fillIntensity: 0.05,
         directionalPos: [15.5, 16, 10.5] as [number, number, number],
@@ -71,13 +71,13 @@ function Scene() {
         buildingScale: [1, 1, 1] as [number, number, number],
         envIntensity: 10.14,
         envValue: 'sunset',
-        ambientColor: '#ffdfd1',
-        directionalColor: '#ffd4c2',
+        ambientColor: '#fff4e5',
+        directionalColor: '#eacb9f',
         shadowsEnabled: true,
         shadowRadius: 9.7,
         shadowBias: -0.001,
         shadowNormalBias: 0.1,
-        exposure: 0.1,
+        exposure: 0.14,
         toneMapping: 'Neutral',
         shadowQuality: 'high',
         shadowResolution: 2048,
