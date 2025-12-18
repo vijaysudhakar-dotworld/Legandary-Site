@@ -38,7 +38,7 @@ const SectionFive: React.FC = () => {
     <section
       ref={sectionFiveRef}
       id="section-five"
-      className="relative h-screen w-full bg-linear-to-b from-blue-400/40 to-transparent overflow-hidden font-montserrat flex items-center justify-center md:justify-end pr-10"
+      className="relative h-screen w-full bg-linear-to-b from-blue-400/40 to-transparent overflow-hidden font-montserrat flex items-center justify-center md:justify-start pl-10 md:pl-20"
     >
       <div className="flex flex-col gap-2 text-right z-10 uppercase md:pr-16 lg:pr-24 2xl:pr-40">
         <a

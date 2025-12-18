@@ -35,11 +35,11 @@ export const useScrollAnimation = (
       },
       // Section 2
       {
-        cameraPos: [-13.408303750702185, 11.066691982639194, 54.60893004017202],
-        cameraTarget: [13, 20.9, 0],
+        cameraPos: [-31.849688341268234, 11.074351876414864, 47.767035322199405],
+        cameraTarget: [23.1, 22, 0],
         fov: 23,
         cameraZoom: 1,
-        cameraRotate: -25.209698848595327
+        cameraRotate: -49
       },
       // Section 3
       {
@@ -49,7 +49,7 @@ export const useScrollAnimation = (
         cameraZoom: 1,
         cameraRotate: 15.331634260494987
       },
-      // Section 4 (Placeholder)
+      // Section 4 
       {
         cameraPos: [14.877977029946356, 1.02899171981047, 67.09472369306603],
         cameraTarget: [-3.1, 18.5, 0],
@@ -57,21 +57,21 @@ export const useScrollAnimation = (
         cameraZoom: 1,
         cameraRotate: 15
       },
-      // Section 5 (Placeholder)
+      // Section 5
       {
-        cameraPos: [-13.408303750702185, 11.066691982639194, 54.60893004017202],
-        cameraTarget: [13, 20.9, 0],
+        cameraPos: [19.417440374640652, 9.375940816039863, 60.64278185359906],
+        cameraTarget: [-18.8, 20.9, 0],
         fov: 23,
         cameraZoom: 1,
-        cameraRotate: -25.209698848595327
+        cameraRotate: 23
       },
-      // Section 6 (Placeholder)
+      // Section 6
       {
-        cameraPos: [10.568650274904392, 7.136651075700531, 49.85600330088933],
-        cameraTarget: [-3.1, 25.2, 0],
-        fov: 25,
+        cameraPos: [64, 5.61, -49],
+        cameraTarget: [0, 20.9, 0],
+        fov: 23,
         cameraZoom: 1,
-        cameraRotate: 15.331634260494987
+        cameraRotate: 127.6
       },
     ];
 
