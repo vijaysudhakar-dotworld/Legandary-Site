@@ -56,36 +56,74 @@ function Scene() {
     const [shadowUpdateFlag, setShadowUpdateFlag] = useState(0)
 
     // Scroll Animation Hook
-    useScrollAnimation(camera as PerspectiveCamera, controlsRef.current, building)
+    useScrollAnimation(camera as PerspectiveCamera, controlsRef.current, building, dirLightRef.current)
 
     // Hardcoded defaults from BuildingViewer
+    // const config = {
+    //     ambientIntensity: 6.07,
+    //     hemiIntensity: 0.76,
+    //     directionalIntensity: 20,
+    //     fillIntensity: 0.05,
+    //     directionalPos: [15.5, 16, 10.5] as [number, number, number],
+    //     directionalTarget: [0, 0, 0] as [number, number, number],
+    //     buildingPos: [0, 0, 0] as [number, number, number],
+    //     buildingRot: [0, 0, 0] as [number, number, number],
+    //     buildingScale: [1, 1, 1] as [number, number, number],
+    //     envIntensity: 10.14,
+    //     envValue: 'sunset',
+    //     ambientColor: '#fff4e5',
+    //     directionalColor: '#eacb9f',
+    //     shadowsEnabled: true,
+    //     shadowRadius: 9.7,
+    //     shadowBias: -0.001,
+    //     shadowNormalBias: 0.1,
+    //     exposure: 0.14,
+    //     toneMapping: 'Neutral',
+    //     shadowQuality: 'high',
+    //     shadowResolution: 2048,
+    //     shadowSoftness: 10,
+    //     shadowDarkness: 0,
+    //     cameraPos: [13.2678760072932, 9.54023342452855, 64.77327507868063] as [number, number, number],
+    //     cameraTarget: [-15.6, 20.9, 0] as [number, number, number],
+    //     fov: 20
+    // }
+
+
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024)
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024)
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
+
     const config = {
-        ambientIntensity: 6.07,
-        hemiIntensity: 0.76,
-        directionalIntensity: 20,
+        ambientIntensity: 5.72,
+        hemiIntensity: 0.43,
+        directionalIntensity: 17.66,
         fillIntensity: 0.05,
-        directionalPos: [15.5, 16, 10.5] as [number, number, number],
+        directionalPos: [50, 11, -30] as [number, number, number],
         directionalTarget: [0, 0, 0] as [number, number, number],
-        buildingPos: [0, 0, 0] as [number, number, number],
-        buildingRot: [0, 0, 0] as [number, number, number],
+        buildingPos: [0, -0.6, 0] as [number, number, number],
+        buildingRot: [0, 1.28, 0] as [number, number, number],
         buildingScale: [1, 1, 1] as [number, number, number],
         envIntensity: 10.14,
         envValue: 'sunset',
-        ambientColor: '#fff4e5',
-        directionalColor: '#eacb9f',
+        ambientColor: '#ffdfd1',
+        directionalColor: '#ffd4c2',
         shadowsEnabled: true,
         shadowRadius: 9.7,
         shadowBias: -0.001,
         shadowNormalBias: 0.1,
-        exposure: 0.14,
+        exposure: 0.12,
         toneMapping: 'Neutral',
         shadowQuality: 'high',
         shadowResolution: 2048,
         shadowSoftness: 10,
         shadowDarkness: 0,
-        cameraPos: [13.2678760072932, 9.54023342452855, 64.77327507868063] as [number, number, number],
-        cameraTarget: [-15.6, 20.9, 0] as [number, number, number],
-        fov: 20
+        cameraPos: [59.139083684664286, 12, 2.543414437743856] as [number, number, number],
+        cameraTarget: (isMobile ? [-21, 18.6, 6] : [-21, 22.6, 17]) as [number, number, number],
+        fov: isMobile ? 33 : 23
     }
 
     // Initial camera setup
@@ -94,7 +132,7 @@ function Scene() {
         camera.position.set(config.cameraPos[0], config.cameraPos[1], config.cameraPos[2])
             ; (camera as PerspectiveCamera).fov = config.fov
         camera.updateProjectionMatrix()
-    }, [camera])
+    }, [camera, config.fov])
 
     // Force shadow map regeneration after model loads
     useEffect(() => {

@@ -33,11 +33,8 @@ const Loader: React.FC<LoaderProps> = ({ isLoading }) => {
 
   return (
     <div
-      className={`h-screen w-screen fixed inset-0 z-[100] flex items-center justify-center transition-all duration-1000 ease-in-out overflow-hidden ${delayedLoading ? "translate-y-0" : "translate-y-full"
+      className={`bg-gradient-to-b md:bg-gradient-to-l from-[#937fa1] md:from-[#7290bc] via-[#e9aa97ff] to-[#febb8eff] h-screen w-screen fixed inset-0 z-[100] flex items-center justify-center transition-all duration-1000 ease-in-out overflow-hidden ${delayedLoading ? "translate-y-0" : "translate-y-full"
         }`}
-      style={{
-        background: "linear-gradient(to left, #7290bc 0%, #e9aa97ff 60%, #febb8eff 100%)"
-      }}
       role="status"
       aria-live="polite"
     >

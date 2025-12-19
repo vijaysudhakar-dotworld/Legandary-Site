@@ -79,7 +79,7 @@ const SectionFour: React.FC = () => {
     <section
       ref={sectionFourRef}
       id="section-four"
-      className={`relative ${isMobile ? "min-h-auto bg-fade" : "h-screen"} w-screen overflow-hidden md:bg-linear-to-t from-blue-400/40 to-transparent`}
+      className={`relative ${isMobile ? "min-h-auto bg-orange-400/10" : "h-screen"} w-screen overflow-hidden md:bg-linear-to-t from-orange-400/20 via-orange-400/20 to-transparent`}
     >
       {/* MOBILE LAYOUT - Vertical Stack */}
       {isMobile ? (

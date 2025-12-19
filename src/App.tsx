@@ -22,6 +22,28 @@ function LoadingScreen() {
 export default function App() {
   const [isExploring, setIsExploring] = useState(false)
   const [savedScrollPos, setSavedScrollPos] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
+  const [activeExploring, setActiveExploring] = useState(false)
+
+  // Handle mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Handle delayed unmount for SectionSeven to allow for fade-out animation
+  useEffect(() => {
+    if (isExploring) {
+      setActiveExploring(true)
+    } else {
+      const timer = setTimeout(() => {
+        setActiveExploring(false)
+      }, 500) // Match the transition duration
+      return () => clearTimeout(timer)
+    }
+  }, [isExploring])
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -79,7 +101,7 @@ export default function App() {
       <ProductionViewer />
 
       <div
-        className="relative z-10 overflow-hidden transition-opacity duration-300"
+        className="relative z-10 overflow-hidden transition-opacity duration-300 bg-[#ab8294]/20"
         style={{
           opacity: isExploring ? 0 : 1,
           pointerEvents: isExploring ? 'none' : 'auto',
@@ -87,7 +109,7 @@ export default function App() {
         }}
       >
         <div className="section-container">
-          <SectionOne isReady={true} />
+          <SectionOne />
         </div>
         <div className="section-container">
           <SectionTwo />
@@ -107,7 +129,7 @@ export default function App() {
       </div>
 
       <div className={`fixed inset-0 z-50 transition-all duration-500 ${isExploring ? ' opacity-100' : ' opacity-0 pointer-events-none'}`}>
-        <SectionSeven onClose={handleClose} />
+        {(activeExploring || !isMobile) && <SectionSeven onClose={handleClose} />}
       </div>
 
       <LoadingScreen />

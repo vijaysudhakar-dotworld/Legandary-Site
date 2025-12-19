@@ -1,22 +1,15 @@
-import React, { useRef } from "react";
-import useFadeOnView from "../utils/useFadeOnView";
+import React from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const SectionThree: React.FC = () => {
-  const fadeRef = useRef<HTMLDivElement | null>(null);
-  useFadeOnView(fadeRef, { 
-    selector: "h2, p, .backdrop-blur-sm, img", 
-    threshold: 0.35, 
-    rootMargin: "0px 0px -15% 0px" 
-  });
 
   return (
     <section
       id="section-three"
-      className="relative bg-fade md:bg-transparent min-h-screen w-screen overflow-hidden flex flex-col justify-center items-center snap-section py-10 md:py-0"
+      className="relative bg-orange-400/10 md:bg-transparent min-h-screen w-screen overflow-hidden flex flex-col justify-center items-center snap-section py-10 md:py-0"
     >
       {/* 1. Center Heading - Responsive sizing and positioning */}
       <div className="relative z-0 mb-6 md:mb-0 md:absolute md:top-[15%] left-0 right-0 text-center px-4">
@@ -26,7 +19,7 @@ const SectionThree: React.FC = () => {
       </div>
 
       {/* 2. Content wrapper for text boxes */}
-      <div ref={fadeRef} className="relative md:absolute inset-0 w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-center px-4 md:px-8">
+      <div className="relative md:absolute inset-0 w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-center px-4 md:px-8">
         
         {/* Left card - Stack on mobile, positioned on desktop */}
         <div 

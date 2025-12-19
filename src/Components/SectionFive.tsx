@@ -38,48 +38,48 @@ const SectionFive: React.FC = () => {
     <section
       ref={sectionFiveRef}
       id="section-five"
-      className="relative h-screen w-full bg-linear-to-b from-blue-400/40 to-transparent overflow-hidden font-montserrat flex items-center justify-center md:justify-start pl-10 md:pl-20"
+      className="relative h-screen w-full bg-linear-to-b from-orange-400/20 via-transparent to-transparent overflow-hidden font-montserrat flex items-center justify-center md:justify-start pl-10 md:pl-20"
     >
-      <div className="flex flex-col gap-2 text-right z-10 uppercase md:pr-16 lg:pr-24 2xl:pr-40">
+      <div className="flex flex-col gap-2 text-right z-10 uppercase pr-16 lg:pr-24 2xl:pr-40">
         <a
           href="https://www.legendary.in/projects/pride"
           target="_blank"
-          className="s5-text-left text-xl md:text-4xl lg:text-5xl font-semibold tracking-wide leading-tight -rotate-3 drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
+          className="s5-text-left text-2xl md:text-4xl lg:text-5xl font-semibold tracking-wide leading-tight -rotate-3 drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
         >
           Legendary Pride
         </a>
         <a
           href="https://www.legendary.in/projects/super60"
           target="_blank"
-          className="s5-text-right text-xl md:text-4xl lg:text-5xl font-semibold text-primary tracking-wide leading-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
+          className="s5-text-right text-2xl md:text-4xl lg:text-5xl font-semibold text-primary tracking-wide leading-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
         >
           Legendary SUPER60
         </a>
         <a
           href="https://www.legendary.in/projects/marvel"
           target="_blank"
-          className="s5-text-left text-xl md:text-4xl lg:text-5xl font-semibold tracking-wide leading-tight -rotate-2 drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
+          className="s5-text-left text-2xl md:text-4xl lg:text-5xl font-semibold tracking-wide leading-tight -rotate-2 drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
         >
           Legendary MARVEL
         </a>
         <a
           href="https://www.legendary.in/projects/reva"
           target="_blank"
-          className="s5-text-right text-xl md:text-4xl lg:text-5xl font-semibold text-primary tracking-wide leading-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
+          className="s5-text-right text-2xl md:text-4xl lg:text-5xl font-semibold text-primary tracking-wide leading-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
         >
           Legendary REVA
         </a>
         <a
           href="https://www.legendary.in/projects/platina"
           target="_blank"
-          className="s5-text-left text-xl md:text-4xl lg:text-5xl font-semibold tracking-wide leading-tight -rotate-2 drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
+          className="s5-text-left text-2xl md:text-4xl lg:text-5xl font-semibold tracking-wide leading-tight -rotate-2 drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
         >
           Legendary PLATINA
         </a>
         <a
           href="https://www.legendary.in/projects/bliss"
           target="_blank"
-          className="s5-text-right text-xl md:text-4xl lg:text-5xl font-semibold text-primary tracking-wide leading-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
+          className="s5-text-right text-2xl md:text-4xl lg:text-5xl font-semibold text-primary tracking-wide leading-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
         >
           Legendary BLISS
         </a>

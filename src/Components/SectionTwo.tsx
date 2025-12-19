@@ -1,19 +1,15 @@
-import React, { useRef } from "react";
-import useFadeOnView from "../utils/useFadeOnView";
+import React from "react";
 
 const SectionTwo: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useFadeOnView(containerRef, { selector: "h1, p, img", threshold: 0.35, rootMargin: "0px 0px -5% 0px" });
 
   return (
     <section
       id="section-two"
-      className="relative bg-fade md:bg-transparent h-screen w-screen flex flex-col justify-center items-end px-10 md:px-20 font-common snap-section"
+      className="relative bg-orange-400/10 md:bg-transparent h-screen w-screen flex flex-col justify-center items-end px-10 md:px-20 font-common snap-section"
     >
-      <div ref={containerRef} className="max-w-xl text-white md:text-primary">
+      <div className="max-w-xl text-white md:text-primary">
         <img src="birds.png" className=" opacity-30! w-100 2xl:w-150 mb-10 md:mb-5" alt="" />
-        <h1 className="font-stylish text-5xl md:text-7xl 2xl:text-8xl text-primary">
+        <h1 className="font-stylish text-5xl md:text-7xl 2xl:text-8xl text-primary text-shadow-lg">
           About
         </h1>
         <p className="text-gray-900 lg:text-gray-700  text-xl 2xl:text-2xl my-5">

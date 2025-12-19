@@ -1,11 +1,7 @@
-import React, { useEffect, useRef } from "react";
-import gsap from "gsap";
+import React from "react";
 
-type SectionOneProps = {
-  isReady: boolean; // comes from App: !isLoading
-};
 
-const SectionOne: React.FC<SectionOneProps> = ({ isReady }) => {
+const SectionOne: React.FC = () => {
   // const scrollToSectionTwo = () => {
   //   const el = document.getElementById("section-two");
   //   if (!el) return;
@@ -42,58 +38,29 @@ const SectionOne: React.FC<SectionOneProps> = ({ isReady }) => {
     "px-8 py-3 rounded-xl font-bold transition-all duration-200 ease-in-out shadow-md hover:shadow-lg hover:scale-[1.03]  cursor-pointer";
   const primaryButtonClasses = `bg-primary text-white border-3 border-gray-800/10  ${baseButtonClasses} hover:bg-primary/90`;
   const secondaryButtonClasses = `bg-white text-primary border-3 border-gray-800/10 ${baseButtonClasses} hover:bg-primary/10 hover:border-primary/90`;
-
-  // --- GSAP intro animation ---
-  const contentRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!isReady || !contentRef.current) return;
-
-    // use gsap.context so React StrictMode doesn't double-animate
-    const ctx = gsap.context(() => {
-      const elements = contentRef.current!.querySelectorAll(".hero-animate");
-
-      gsap.fromTo(
-        elements,
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 1.4,
-          ease: "power3.out",
-          // delay: 0.5,
-          stagger: 0.12,
-        }
-      );
-    }, contentRef);
-
-    return () => {
-      ctx.revert();
-    };
-  }, [isReady]);
   
 
   return (
     <section
       id="section-one"
-      className="bg-overlay text-center md:text-start md:bg-transparent relative h-screen w-full flex flex-col justify-center px-8 md:px-24 z-10 font-common snap-section"
+      className="bg-orange-400/10 text-center md:text-start md:bg-transparent relative h-screen w-full flex flex-col justify-center px-8 md:px-24 z-10 font-common snap-section"
     >
       <div
         
         className="flex flex-col items-center sm:items-start pointer-events-auto select-none lg:w-[60%] xl:w-[50%] md:mt-5 2xl:mt-10"
       >
-        <div ref={contentRef} className="relative lg:-translate-y-4">
-          <h1 className="hero-animate font-stylish text-5xl md:text-7xl 3xl:text-8xl text-primary">
+        <div  className="relative lg:-translate-y-4">
+          <h1 className="hero-animate font-stylish text-5xl md:text-7xl 3xl:text-8xl text-white md:text-primary text-shadow-lg md:text-shadow-none">
             Legendary Builders
           </h1>
 
-          <p className="hero-animate text-gray-900 lg:text-gray-700 text-xl 3xl:text-2xl my-5">
+          <p className="hero-animate   text-xl 3xl:text-2xl my-5">
             Built with precision, designed with purpose. Discover a modern
             living experience shaped around quality, comfort, and smarter
             spaces.
           </p>
 
-          <div className="hero-animate flex flex-col sm:flex-row items-center sm:items-start gap-4 w-[90%] md:w-full mt-8 md:mt-4 max-w-md mx-auto sm:mx-0 mb-5">
+          <div className="hero-animate flex flex-col sm:flex-row items-center sm:items-start gap-4 w-[70%] md:w-full mt-8 md:mt-4 max-w-md mx-auto sm:mx-0 mb-5">
             {/* BOOK NOW Button */}
             <button
               className={`w-full text-sm 2xl:text-md ${primaryButtonClasses}`} onClick={() => {
