@@ -3,6 +3,7 @@ import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls, useGLTF, Environment, useTexture, Billboard } from '@react-three/drei'
 import { PerspectiveCamera, PCFSoftShadowMap, PCFShadowMap, BasicShadowMap, ACESFilmicToneMapping, ReinhardToneMapping, LinearToneMapping, NoToneMapping, NeutralToneMapping, Group, DirectionalLight } from 'three'
 import { useScrollAnimation } from '../utils/useScrollAnimation'
+import { MovingCloud } from './Cloud'
 
 function Model({ url, position, rotation, scale, shadowsEnabled, modelRef }: { url: string, position: [number, number, number], rotation: [number, number, number], scale: [number, number, number], shadowsEnabled: boolean, modelRef: (node: Group) => void }) {
     const gltf = useGLTF(url)
@@ -16,7 +17,6 @@ function Model({ url, position, rotation, scale, shadowsEnabled, modelRef }: { u
                 child.receiveShadow = shadowsEnabled
                 if (child.material) {
                     child.material.needsUpdate = true
-                    // Force material updates for shadow visibility
                     child.material.forceUpdate = true
                 }
             }
@@ -27,26 +27,6 @@ function Model({ url, position, rotation, scale, shadowsEnabled, modelRef }: { u
     return <primitive ref={modelRef} object={gltf.scene} position={position} rotation={rotation} scale={scale} />
 }
 
-function MovingCloud({ position, speed, scale, color = "#ffa2a2ff" }: { position: [number, number, number], speed: number, scale: [number, number, number], color?: string }) {
-    const cloudRef = useRef<any>(null)
-    const texture = useTexture('/cloud.png')
-    const initialX = position[0]
-
-    useFrame((state) => {
-        if (cloudRef.current) {
-            cloudRef.current.position.x = initialX + Math.sin(state.clock.elapsedTime * speed) * 1
-        }
-    })
-
-    return (
-        <Billboard ref={cloudRef} position={position}>
-            <mesh scale={scale}>
-                <planeGeometry />
-                <meshBasicMaterial map={texture} transparent={true} depthWrite={false} opacity={0.25} toneMapped={false} color={color} />
-            </mesh>
-        </Billboard>
-    )
-}
 
 function Scene() {
     const { camera, scene, gl } = useThree()
@@ -54,6 +34,29 @@ function Scene() {
     const controlsRef = useRef<any>(null)
     const [building, setBuilding] = useState<Group | null>(null)
     const [shadowUpdateFlag, setShadowUpdateFlag] = useState(0)
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024)
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024)
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
+
+    const parallaxGroupRef = useRef<Group>(null)
+    const parallaxOffset = useRef({ x: 0, y: 0 })
+    const targetParallax = useRef({ x: 0, y: 0 })
+
+    useEffect(() => {
+        if (isMobile) return
+
+        const handleMouseMove = (e: MouseEvent) => {
+            targetParallax.current.x = (e.clientX / window.innerWidth) * 2 - 1
+            targetParallax.current.y = -(e.clientY / window.innerHeight) * 2 + 1
+        }
+
+        window.addEventListener('mousemove', handleMouseMove)
+        return () => window.removeEventListener('mousemove', handleMouseMove)
+    }, [isMobile])
 
     // Scroll Animation Hook
     useScrollAnimation(camera as PerspectiveCamera, controlsRef.current, building, dirLightRef.current)
@@ -87,15 +90,6 @@ function Scene() {
     //     cameraTarget: [-15.6, 20.9, 0] as [number, number, number],
     //     fov: 20
     // }
-
-
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024)
-
-    useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 1024)
-        window.addEventListener('resize', handleResize)
-        return () => window.removeEventListener('resize', handleResize)
-    }, [])
 
     const config = {
         ambientIntensity: 5.72,
@@ -167,27 +161,22 @@ function Scene() {
                 if (config.shadowQuality === 'low') (gl as any).shadowMap.type = BasicShadowMap
                 else if (config.shadowQuality === 'medium') (gl as any).shadowMap.type = PCFShadowMap
                 else (gl as any).shadowMap.type = PCFSoftShadowMap
-
-                // Force renderer to regenerate shadow maps
                 gl.shadowMap.needsUpdate = true
             }
         } catch (e) {
             console.warn('Renderer settings error:', e)
         }
-    }, [gl, config, shadowUpdateFlag]) // Added shadowUpdateFlag dependency
+    }, [gl, config, shadowUpdateFlag]) 
 
-    // Update directional light with forced shadow regeneration
     useEffect(() => {
         const dl = dirLightRef.current
         if (!dl) return
 
-        // Force shadow map regeneration
         if (dl.shadow) {
             const res = config.shadowResolution || 2048
             dl.shadow.mapSize.width = res
             dl.shadow.mapSize.height = res
 
-            // Invalidate the current shadow map to force regeneration
             if (dl.shadow.map) {
                 dl.shadow.map.dispose()
                 dl.shadow.map = null as any
@@ -236,11 +225,30 @@ function Scene() {
         return () => clearTimeout(timer)
     }, [dirLightRef, config, scene, shadowUpdateFlag])
 
-    // Additional frame-based shadow validation
+    // Additional frame-based shadow validation and Parallax effect
     useFrame(() => {
         if (dirLightRef.current?.shadow) {
             // Ensure shadow matrices are updated
             dirLightRef.current.shadow.updateMatrices(dirLightRef.current)
+        }
+
+        // Smooth Parallax Effect
+        if (!isMobile && parallaxGroupRef.current) {
+            // Update target values with subtle intensity
+            const targetX = targetParallax.current.x * 1.5
+            const targetY = targetParallax.current.y * 0.8
+
+            // Smoothly interpolate (lerp)
+            parallaxOffset.current.x += (targetX - parallaxOffset.current.x) * 0.05
+            parallaxOffset.current.y += (targetY - parallaxOffset.current.y) * 0.05
+
+            // Apply to position (additive to the child's animated position)
+            parallaxGroupRef.current.position.x = parallaxOffset.current.x
+            parallaxGroupRef.current.position.y = parallaxOffset.current.y
+
+            // Subtle rotation tilt (additive to the child's animated rotation)
+            parallaxGroupRef.current.rotation.y = parallaxOffset.current.x * 0.015
+            parallaxGroupRef.current.rotation.x = -parallaxOffset.current.y * 0.01
         }
     })
 
@@ -269,14 +277,16 @@ function Scene() {
             <pointLight position={[-10, 5, 10]} intensity={0} distance={40} />
 
             <Suspense fallback={null}>
-                <Model
-                    url="/Outer.glb"
-                    position={config.buildingPos}
-                    rotation={config.buildingRot}
-                    scale={config.buildingScale}
-                    shadowsEnabled={config.shadowsEnabled}
-                    modelRef={setBuilding}
-                />
+                <group ref={parallaxGroupRef}>
+                    <Model
+                        url="/Outer.glb"
+                        position={config.buildingPos}
+                        rotation={config.buildingRot}
+                        scale={config.buildingScale}
+                        shadowsEnabled={config.shadowsEnabled}
+                        modelRef={setBuilding}
+                    />
+                </group>
                 <Environment preset={config.envValue as any} background={false} />
                 <MovingCloud position={[-30, 33, -10]} speed={0.4} scale={[20, 10, 1]} color="#ffe4d1" />
                 <MovingCloud position={[45, 35, -10]} speed={0.3} scale={[25, 12.5, 1]} color="#ffd1d1" />
